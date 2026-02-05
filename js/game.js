@@ -280,6 +280,11 @@ Game.prototype.resize = function() {
     // Available space is taller than game: fit to width
     displayW = windowW;
     displayH = windowW / gameAspect;
+    // Cap: never exceed available height (prevents banner clipping)
+    if (displayH > availableH) {
+      displayH = availableH;
+      displayW = availableH * gameAspect;
+    }
   }
 
   this.canvas.style.width = displayW + 'px';

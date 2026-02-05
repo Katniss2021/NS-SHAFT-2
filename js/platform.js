@@ -176,6 +176,7 @@ function SpringPlatform(x, y) {
 SpringPlatform.prototype = Object.create(Platform.prototype);
 
 SpringPlatform.prototype.onLand = function(player) {
+  player.heal(C.HP_HEAL_NORMAL);
   player.vy = C.SPRING_BOUNCE_VY;
   player.isOnPlatform = false;
   this.compressed = true;
