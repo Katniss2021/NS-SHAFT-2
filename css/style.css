@@ -25,6 +25,7 @@ html, body {
   height: 100%;
   overflow: hidden;
   padding-top: env(safe-area-inset-top, 59px);
+  padding-bottom: 7vh;
 }
 
 /* === Banner Area (above game) === */
@@ -48,8 +49,8 @@ html, body {
 
 #banner-logo,
 #banner-qr {
-  width: 100px;
-  height: 100px;
+  width: 94px;
+  height: 94px;
   object-fit: cover;
   border-radius: 10px;
   border: 1.5px solid #2a2a4a;
