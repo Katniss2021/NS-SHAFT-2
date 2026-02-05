@@ -208,9 +208,9 @@ Renderer.prototype.drawEasterEgg = function(image, phase, timer) {
   ctx.textAlign = 'center';
   ctx.textBaseline = 'top';
   ctx.fillStyle = '#000';
-  ctx.fillText('\u5927\u897F\u74DC\u8C22\u8C22\u4F60\uFF01', C.GAME_WIDTH / 2 + 1, textY + 1);
+  ctx.fillText('\u5927\u897F\u74DC\uFF0CKat\uFF0CKaori \uFF1A\uFF09', C.GAME_WIDTH / 2 + 1, textY + 1);
   ctx.fillStyle = '#ffcc33';
-  ctx.fillText('\u5927\u897F\u74DC\u8C22\u8C22\u4F60\uFF01', C.GAME_WIDTH / 2, textY);
+  ctx.fillText('\u5927\u897F\u74DC\uFF0CKat\uFF0CKaori \uFF1A\uFF09', C.GAME_WIDTH / 2, textY);
 
   // "FLOOR 100!" badge
   this.drawText('FLOOR 100!', C.GAME_WIDTH / 2, textY + 26, 11, '#ffffff', 'center');
