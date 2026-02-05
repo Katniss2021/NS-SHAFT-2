@@ -179,19 +179,21 @@ Game.prototype.checkCollisions = function() {
     if (prevFeetY <= platTopPrev && feetY >= platTop) {
       this.player.landOnPlatform(platTop, plat);
 
-      // Platform-specific effects
-      var hpBefore = this.player.hp;
-      plat.onLand(this.player);
+      // Only trigger onLand effects on FIRST landing (not every frame while standing)
+      if (!this.player.wasOnPlatform) {
+        var hpBefore = this.player.hp;
+        plat.onLand(this.player);
 
-      // Play appropriate sound
-      if (this.player.hp < hpBefore) {
-        this.audio.playDamage();
-      } else if (plat.type === 'spring') {
-        this.audio.playSpring();
-      } else {
-        this.audio.playLand();
-        if (this.player.hp > hpBefore) {
-          this.audio.playHeal();
+        // Play appropriate sound
+        if (this.player.hp < hpBefore) {
+          this.audio.playDamage();
+        } else if (plat.type === 'spring') {
+          this.audio.playSpring();
+        } else {
+          this.audio.playLand();
+          if (this.player.hp > hpBefore) {
+            this.audio.playHeal();
+          }
         }
       }
 

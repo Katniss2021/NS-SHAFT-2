@@ -14,6 +14,7 @@ Player.prototype.reset = function() {
   this.hp = C.PLAYER_START_HP;
   this.maxHp = C.PLAYER_MAX_HP;
   this.isOnPlatform = false;
+  this.wasOnPlatform = false;
   this.currentPlatform = null;
   this.facing = 0; // -1 left, 0 neutral, 1 right
   this.invulnerable = 0;
@@ -53,6 +54,7 @@ Player.prototype.update = function(direction, scrollSpeed) {
     this.y -= scrollSpeed;
   }
 
+  this.wasOnPlatform = this.isOnPlatform;
   this.isOnPlatform = false;
   this.currentPlatform = null;
 
