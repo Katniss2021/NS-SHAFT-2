@@ -116,6 +116,27 @@ AudioManager.prototype.playGameOver = function() {
   }
 };
 
+AudioManager.prototype.playEasterEgg = function() {
+  if (!this.unlocked || !this.enabled) return;
+  var ctx = this.ctx;
+  var t = ctx.currentTime;
+  // Happy ascending arpeggio: C5 → E5 → G5 → C6
+  var notes = [523, 659, 784, 1047];
+  for (var i = 0; i < notes.length; i++) {
+    var osc = ctx.createOscillator();
+    var gain = ctx.createGain();
+    osc.type = 'sine';
+    var noteT = t + i * 0.15;
+    osc.frequency.setValueAtTime(notes[i], noteT);
+    gain.gain.setValueAtTime(0.15, noteT);
+    gain.gain.exponentialRampToValueAtTime(0.001, noteT + 0.3);
+    osc.connect(gain);
+    gain.connect(this.masterGain);
+    osc.start(noteT);
+    osc.stop(noteT + 0.3);
+  }
+};
+
 AudioManager.prototype.playMenuSelect = function() {
   if (!this.unlocked || !this.enabled) return;
   var ctx = this.ctx;

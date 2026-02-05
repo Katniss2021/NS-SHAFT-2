@@ -11,7 +11,7 @@ function Game(canvas, ctx) {
   this.scaleInfo = { scale: 1, offsetX: 0, offsetY: 0 };
   this.input = new InputManager(canvas, this.scaleInfo);
 
-  this.state = 'menu'; // 'menu' | 'playing' | 'gameover'
+  this.state = 'menu'; // 'menu' | 'playing' | 'gameover' | 'easter_egg'
   this.score = 0;
   this.level = 0;
   this.scrollSpeed = C.PLATFORM_BASE_SPEED;
@@ -19,6 +19,13 @@ function Game(canvas, ctx) {
   this.isNewRecord = false;
   this.frameCount = 0;
   this.gameOverTimer = 0;
+
+  // Easter egg (floor 100)
+  this.easterEggImage = new Image();
+  this.easterEggImage.src = 'Selfie.jpg';
+  this.easterEggTriggered = false;
+  this.easterEggTimer = 0;
+  this.easterEggPhase = 'idle'; // 'idle' | 'revealing' | 'showing' | 'fading'
 }
 
 Game.prototype.init = function() {
@@ -33,6 +40,7 @@ Game.prototype.start = function() {
   this.level = 0;
   this.scrollSpeed = C.PLATFORM_BASE_SPEED;
   this.isNewRecord = false;
+  this.easterEggTriggered = false;
   this.player.reset();
   this.platformManager.init();
   this.platformManager.level = 0;
@@ -61,6 +69,10 @@ Game.prototype.update = function() {
         this.frameCount = 0;
       }
       break;
+
+    case 'easter_egg':
+      this.updateEasterEgg();
+      break;
   }
 };
 
@@ -81,6 +93,16 @@ Game.prototype.updatePlaying = function() {
   if (newRecycled > 0) {
     this.score += newRecycled * C.SCORE_PER_PLATFORM;
     this.updateDifficulty();
+  }
+
+  // Easter egg trigger at floor 100
+  if (this.score >= 100 && !this.easterEggTriggered) {
+    this.easterEggTriggered = true;
+    this.easterEggTimer = 0;
+    this.easterEggPhase = 'revealing';
+    this.state = 'easter_egg';
+    this.audio.playEasterEgg();
+    return;
   }
 
   // Collision detection
@@ -108,6 +130,31 @@ Game.prototype.updatePlaying = function() {
       this.doGameOver();
       return;
     }
+  }
+};
+
+Game.prototype.updateEasterEgg = function() {
+  this.easterEggTimer++;
+
+  var REVEAL_FRAMES = 120;  // 2s
+  var SHOW_FRAMES = 180;    // 3s
+  var FADE_FRAMES = 30;     // 0.5s
+
+  if (this.easterEggPhase === 'revealing' && this.easterEggTimer >= REVEAL_FRAMES) {
+    this.easterEggPhase = 'showing';
+    this.easterEggTimer = 0;
+  } else if (this.easterEggPhase === 'showing') {
+    // Tap to skip
+    if (this.input.consumeAction()) {
+      this.easterEggPhase = 'fading';
+      this.easterEggTimer = 0;
+    } else if (this.easterEggTimer >= SHOW_FRAMES) {
+      this.easterEggPhase = 'fading';
+      this.easterEggTimer = 0;
+    }
+  } else if (this.easterEggPhase === 'fading' && this.easterEggTimer >= FADE_FRAMES) {
+    this.easterEggPhase = 'idle';
+    this.state = 'playing';
   }
 };
 
@@ -179,6 +226,15 @@ Game.prototype.doGameOver = function() {
   saveToStorage('ns-shaft-highscores', this.highScores);
 };
 
+Game.prototype.renderGameScene = function() {
+  this.renderer.clear();
+  this.renderer.drawWalls();
+  this.platformManager.draw(this.ctx);
+  this.player.draw(this.ctx);
+  this.renderer.drawCeiling();
+  this.renderer.drawHUD(this.player.hp, this.player.maxHp, this.score, this.level);
+};
+
 Game.prototype.render = function() {
   switch (this.state) {
     case 'menu':
@@ -186,22 +242,21 @@ Game.prototype.render = function() {
       break;
 
     case 'playing':
-      this.renderer.clear();
-      this.renderer.drawWalls();
-      this.platformManager.draw(this.ctx);
-      this.player.draw(this.ctx);
-      this.renderer.drawCeiling();
-      this.renderer.drawHUD(this.player.hp, this.player.maxHp, this.score, this.level);
+      this.renderGameScene();
       break;
 
     case 'gameover':
-      this.renderer.clear();
-      this.renderer.drawWalls();
-      this.platformManager.draw(this.ctx);
-      this.player.draw(this.ctx);
-      this.renderer.drawCeiling();
-      this.renderer.drawHUD(this.player.hp, this.player.maxHp, this.score, this.level);
+      this.renderGameScene();
       this.renderer.drawGameOver(this.score, this.highScores[0] || 0, this.isNewRecord, this.gameOverTimer);
+      break;
+
+    case 'easter_egg':
+      this.renderGameScene();
+      this.renderer.drawEasterEgg(
+        this.easterEggImage,
+        this.easterEggPhase,
+        this.easterEggTimer
+      );
       break;
   }
 };
@@ -209,14 +264,18 @@ Game.prototype.render = function() {
 Game.prototype.resize = function() {
   var windowW = window.innerWidth;
   var windowH = window.innerHeight;
+  var banner = document.getElementById('banner');
+  var bannerH = banner ? banner.offsetHeight : 0;
+  var availableH = windowH - bannerH;
   var gameAspect = C.GAME_WIDTH / C.GAME_HEIGHT;
-  var windowAspect = windowW / windowH;
   var displayW, displayH;
 
-  if (windowAspect > gameAspect) {
-    displayH = windowH;
-    displayW = windowH * gameAspect;
+  if ((windowW / availableH) > gameAspect) {
+    // Available space is wider than game: fit to height
+    displayH = availableH;
+    displayW = availableH * gameAspect;
   } else {
+    // Available space is taller than game: fit to width
     displayW = windowW;
     displayH = windowW / gameAspect;
   }
@@ -226,5 +285,5 @@ Game.prototype.resize = function() {
 
   this.scaleInfo.scale = C.GAME_WIDTH / displayW;
   this.scaleInfo.offsetX = (windowW - displayW) / 2;
-  this.scaleInfo.offsetY = (windowH - displayH) / 2;
+  this.scaleInfo.offsetY = bannerH + (availableH - displayH) / 2;
 };
