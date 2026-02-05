@@ -20,12 +20,21 @@ html, body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   width: 100%;
   height: 100%;
   overflow: hidden;
-  padding-top: env(safe-area-inset-top, 59px);
-  padding-bottom: 7vh;
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
+/* iPhone PWA (standalone) — Dynamic Island offset + vertical centering */
+@media (display-mode: standalone) {
+  #gameContainer {
+    justify-content: center;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: 7vh;
+  }
 }
 
 /* === Banner Area (above game) === */
