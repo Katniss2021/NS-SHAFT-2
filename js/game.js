@@ -159,10 +159,35 @@ Game.prototype.updateEasterEgg = function() {
 };
 
 Game.prototype.checkCollisions = function() {
-  if (this.player.vy <= 0) return; // Only check when falling
-
   var platforms = this.platformManager.getActivePlatforms();
   var pb = this.player.getBounds();
+
+  // Upward collision: head hits platform bottom (when bouncing up from spring)
+  if (this.player.vy < 0) {
+    var headY = pb.y;
+    var prevHeadY = headY - this.player.vy;
+
+    for (var i = 0; i < platforms.length; i++) {
+      var plat = platforms[i];
+      var platB = plat.getBounds();
+
+      // Horizontal overlap
+      if (pb.x + pb.w <= platB.x || pb.x >= platB.x + platB.w) continue;
+
+      // Head crossed platform bottom from below
+      var platBottom = platB.y + platB.h;
+      if (prevHeadY >= platBottom && headY < platBottom) {
+        this.player.y = platBottom;
+        this.player.vy = 0;
+        break;
+      }
+    }
+    return;
+  }
+
+  // Downward collision: feet land on platform top
+  if (this.player.vy <= 0) return;
+
   var feetY = pb.y + pb.h;
   var prevFeetY = feetY - this.player.vy;
 
